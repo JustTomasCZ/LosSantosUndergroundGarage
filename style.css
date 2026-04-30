@@ -1,0 +1,350 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* =========================
+   ZÁKLAD
+========================= */
+html, body {
+    margin: 0;
+    overflow-x: hidden;
+    font-family: Arial, sans-serif;
+    color: #fff;
+    background: black;
+    overscroll-behavior-y: auto; /* umožní refresh */
+}
+
+/* posun pod navbar */
+body {
+    padding-top: 90px;
+}
+
+/* =========================
+   BACKGROUNDY
+========================= */
+.home,
+.cennik,
+.lokace {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.home {
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+    url("bg-home.jpg") center/cover fixed;
+}
+
+.cennik {
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+    url("bg-cennik.jpg") center/cover fixed;
+}
+
+.lokace {
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+    url("bg-lokace.jpg") center/cover fixed;
+}
+
+/* =========================
+   ZAMĚSTNANCI (SCROLL POVOLEN)
+========================= */
+.zamestnanci {
+    background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)),
+    url("bg-staff.jpg") center/cover fixed;
+
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+/* =========================
+   PC vs MOBIL CHOVÁNÍ
+========================= */
+
+/* 💻 PC – bez scrollu */
+@media (min-width: 769px) {
+    .home,
+    .cennik,
+    .lokace {
+        overflow: hidden;
+    }
+}
+
+/* 📱 MOBIL – scroll + refresh */
+@media (max-width: 768px) {
+    .home,
+    .cennik,
+    .lokace {
+        overflow-y: auto;
+    }
+
+    body {
+        touch-action: pan-y; /* zákaz posunu do stran + zoom bug fix */
+    }
+}
+
+/* =========================
+   NAVBAR
+========================= */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 25px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+}
+
+.logo {
+    height: 45px;
+}
+
+.navbar ul {
+    display: flex;
+    gap: 25px;
+    list-style: none;
+}
+
+.navbar a {
+    color: #ccc;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.navbar a:hover {
+    color: #7aa2ff;
+}
+
+/* =========================
+   OBSAH
+========================= */
+.center,
+.content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+}
+
+/* homepage layout */
+.center {
+    min-height: 100vh;
+    padding: 120px 20px 60px;
+    gap: 50px;
+}
+
+/* =========================
+   TEXTY
+========================= */
+.main-title {
+    font-size: 3.2rem;
+}
+
+.about {
+    max-width: 700px;
+}
+
+.about p {
+    color: #ddd;
+    line-height: 1.6;
+}
+
+/* =========================
+   CARDS
+========================= */
+.cards {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 25px;
+    margin-top: 30px;
+    width: 100%;
+}
+
+.card {
+    background: rgba(20,20,30,0.85);
+    padding: 20px;
+    border-radius: 12px;
+    transition: 0.3s;
+    min-width: 220px;
+}
+
+.card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #7aa2ff;
+}
+
+/* =========================
+   ZAMĚSTNANCI NADPISY
+========================= */
+.rank-title {
+    width: 100%;
+    margin-top: 60px;
+    margin-bottom: 20px;
+    font-size: 1.7rem;
+    color: #7aa2ff;
+    text-transform: uppercase;
+}
+
+/* fix aby první nebyl schovaný */
+.zamestnanci .rank-title:first-of-type {
+    margin-top: 20px;
+}
+
+/* =========================
+   MAPA
+========================= */
+.map {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 20px;
+    border-radius: 12px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+
+    .navbar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px 15px;
+    }
+
+    .logo {
+        height: 35px;
+    }
+
+    .navbar ul {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .navbar a {
+        font-size: 14px;
+    }
+
+    .cards {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.logo {
+    height: 45px;
+}
+
+@media (max-width: 768px) {
+
+    .brand {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .brand-name {
+        font-size: 0.9rem;
+        text-align: center;
+    }
+}
+
+.brand-name {
+    text-shadow: 0 0 10px rgba(122,162,255,0.4);
+}
+
+@media (max-width: 768px) {
+    body.zamestnanci {
+        padding-top: 140px; /* víc místa kvůli vyššímu navbaru */
+    }
+}
+
+/* =========================
+   LOGIN STRÁNKA
+========================= */
+body.login {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)),
+    url("bg-home.jpg") center/cover fixed;
+
+    text-align: center;
+    gap: 15px;
+}
+
+/* nadpis login */
+.login h2 {
+    font-size: 2rem;
+    margin: 0;
+
+    color: #7aa2ff;
+    text-shadow: 0 0 10px rgba(122,162,255,0.4);
+}
+
+/* form box */
+.login form {
+    background: rgba(20,20,30,0.9);
+    padding: 30px;
+    border-radius: 12px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    min-width: 280px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+}
+
+/* input */
+.login input {
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    outline: none;
+
+    background: #111;
+    color: white;
+    border: 1px solid #333;
+
+    transition: 0.3s;
+}
+
+.login input:focus {
+    border-color: #7aa2ff;
+    box-shadow: 0 0 10px rgba(122,162,255,0.4);
+}
+
+/* =========================
+   INDEX.HTML – PC NO SCROLL
+========================= */
+@media (min-width: 769px) {
+    body.home {
+        overflow: hidden;
+        height: 100vh;
+    }
+}

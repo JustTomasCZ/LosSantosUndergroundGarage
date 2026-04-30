@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mechanik System</title>
+
+<style>
+/* =========================
+   NAVBAR
+========================= */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 25px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+.logo {
+    height: 45px;
+}
+
+.navbar ul {
+    display: flex;
+    gap: 25px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    align-items: center;
+}
+
+.navbar a {
+    color: #ccc;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.navbar a:hover {
+    color: #7aa2ff;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-name {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)),
+    url("bg-home.jpg") center/cover fixed;
+
+  color: white;
+  font-family: Arial;
+}
+
+h1 { font-size:40px; }
+p { color:#aaa; }
+
+.btn {
+  display:inline-block;
+  padding:15px 30px;
+  margin:10px;
+  background:#00ff88;
+  color:black;
+  text-decoration:none;
+  border-radius:10px;
+  font-weight:bold;
+}
+
+.btn:hover {
+  background:#00cc6a;
+}
+</style>
+
+</head>
+
+<nav class="navbar">
+
+    <div class="brand">
+        <img src="logo.png" class="logo">
+        <span class="brand-name">Los Santos Underground Garage</span>
+    </div>
+
+    <ul>
+        <li><a href="index.html">Domů</a></li>
+        <li><a href="cennik.html">Ceník</a></li>
+        <li><a href="lokace.html">Lokace</a></li>
+        <li><a href="zamestnanci.html">Zaměstnanci</a></li>
+        <li><a href="mechanici-login.html">Mechanici</a></li>
+    </ul>
+
+</nav>
+
+<body>
+
+<h1>🔧 Mechanik System</h1>
+<p>Systém pro správu směn a zakázek</p>
+
+<br>
+
+<a class="btn" href="https://github.com/JustTomasCZ/mechanik-system/releases/latest">
+⬇️ Stáhnout aplikaci (.exe)
+</a>
+
+<br>
+
+<a class="btn" href="app.html">
+📱 Otevřít web verzi
+</a>
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<title>Mechanici Login</title>
+
+<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/png" href="logo.png">
+</head>
+
+<body class="login">
+
+<nav class="navbar">
+
+    <div class="brand">
+        <img src="logo.png" class="logo">
+        <span class="brand-name">Los Santos Underground Garage</span>
+    </div>
+
+    <ul>
+        <li><a href="index.html">Domů</a></li>
+        <li><a href="cennik.html">Ceník</a></li>
+        <li><a href="lokace.html">Lokace</a></li>
+        <li><a href="zamestnanci.html">Zaměstnanci</a></li>
+        <li><a href="mechanici-login.html" class="mechanic-btn">Mechanici</a></li>
+    </ul>
+
+</nav>
+
+<h2>Přihlášení pro mechaniky</h2>
+
+<form id="loginForm">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Heslo">
+    <button type="submit">Přihlásit</button>
+</form>
+
+<!-- FIREBASE -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAk22LQafNIeFMWDrZw6n06MobgwjHhYRQ",
+    authDomain: "mechanik-system.firebaseapp.com",
+    projectId: "mechanik-system",
+    storageBucket: "mechanik-system.firebasestorage.app",
+    messagingSenderId: "510741349868",
+    appId: "1:510741349868:web:73dc4841e32df4e4586cc9"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  document.getElementById("loginForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        window.location.href = "mechanici.html";
+      })
+      .catch(() => {
+        alert("Špatné přihlášení");
+      });
+  });
+</script>
+
+</body>
+</html>
