@@ -21,17 +21,33 @@ input, select, button { padding:10px; margin:5px; }
 h2 { margin-top:0; }
 .big { font-size:22px; font-weight:bold; color:#00ff88; }
 button { cursor:pointer; }
+
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #111;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px;
+  color: white;
+  z-index: 9999;
+}
 </style>
 
 </head>
 
 <body>
 
+<div id="loading">Načítání systému...</div>
+
 <h1>🔧 Mechanik System</h1>
+
+<div id="app" style="display:none;">
 
 <div class="card">
 <h2>👤 Mechanik</h2>
-<input id="mechanik" placeholder="Jméno mechanika">
+<input id="mechanik" readonly>
 </div>
 
 <div class="card">
@@ -81,11 +97,84 @@ button { cursor:pointer; }
 <p>💵 Celkový obrat: <span id="total">0</span> $</p>
 </div>
 
-<script>
+<div id="adminPanel" class="card" style="display:none;">
+  <h2>🧑‍💼 Vedení</h2>
 
-/* =======================
-   WEBHOOKY
-======================= */
+  <select id="userSelect"></select>
+  <button onclick="showStats()">📊 Zobrazit</button>
+  <button onclick="resetUser()">🔄 Reset</button>
+
+  <div id="adminResult"></div>
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, doc, getDoc, setDoc, deleteDoc } 
+from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAk22LQafNIeFMWDrZw6n06MobgwjHhYRQ",
+  authDomain: "mechanik-system.firebaseapp.com",
+  projectId: "mechanik-system",
+  storageBucket: "mechanik-system.firebasestorage.app",
+  messagingSenderId: "510741349868",
+  appId: "1:510741349868:web:73dc4841e32df4e4586cc9"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* UI */
+function showApp() {
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("app").style.display = "block";
+  document.body.classList.add("loaded");
+}
+
+/* AUTH */
+onAuthStateChanged(auth, async (user) => {
+
+  if (!user) {
+    window.location.href = "mechanici-login.html";
+    return;
+  }
+
+  const ref = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      email: user.email,
+      name: user.email.split("@")[0],
+      role: "employee"
+    });
+  }
+
+  const data = (await getDoc(ref)).data();
+
+  const cleanName = (data.name || user.email || "").split("@")[0];
+  document.getElementById("mechanik").value = cleanName;
+
+  if (data.role === "management") {
+    document.getElementById("adminPanel").style.display = "block";
+    loadUsers();
+  }
+
+  showApp();
+});
+
+/* STAV */
+let shiftActive = false;
+let jobs = 0;
+let totalRevenue = 0;
+let salaryRevenue = 0;
+
+/* WEBHOOKY */
 const WEBHOOKS = {
   LSPD: "https://discord.com/api/webhooks/1498994945720193116/7JLdS9rlFYdtMWPphDi7uKd1rzkKNhq3XJxL_Os_6JfeQz79n_dqwjv2o5fsor7QUHTh",
   EMS: "https://discord.com/api/webhooks/1498994888187052194/DJs65eZs6H4xOUT7gQN_Y92-FfxSuC5D4oehiAwQzrJHgbdTWzYwbqFHeN1aqP3iX5y6",
@@ -94,120 +183,142 @@ const WEBHOOKS = {
   SHIFTS: "https://discord.com/api/webhooks/1498999184727212143/Dzb4AiJblx51X8CLK6dtMjv54TyXIBx8NBlqB2KTFg33N-TaROz5Jm8UKGK-1gg3f17t"
 };
 
-/* =======================
-   STAV
-======================= */
-let shiftActive = false;
-let jobs = 0;
-let total = 0;
-
-/* =======================
-   UI START
-======================= */
-window.onload = () => {
-  document.body.classList.add("loaded");
-  updateUI();
-};
-
-/* =======================
-   DISCORD
-======================= */
-function sendWebhook(url, content) {
-  fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content })
-  });
+/* FIXED SEND WEBHOOK */
+async function sendWebhook(url, content) {
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content })
+    });
+  } catch (err) {
+    console.error("Webhook error:", err);
+  }
 }
 
-/* =======================
-   SMĚNA
-======================= */
-function startShift() {
+/* SMĚNA */
+window.startShift = function () {
   shiftActive = true;
 
-  const name = document.getElementById("mechanik").value || "Neznámý";
+  const name = document.getElementById("mechanik").value || "Neznámý mechanik";
 
   sendWebhook(WEBHOOKS.SHIFTS,
 `🟢 START SMĚNY
 Mechanik: ${name}`);
 
-  updateUI();
-}
+  document.getElementById("shiftStatus").innerText = "Směna: ✔ aktivní";
+};
 
-function endShift() {
-  shiftActive = false;
+window.endShift = function () {
 
-  const name = document.getElementById("mechanik").value || "Neznámý";
+  const name = document.getElementById("mechanik").value || "Neznámý mechanik";
+  const salary = Math.floor(salaryRevenue * 0.2);
 
   sendWebhook(WEBHOOKS.SHIFTS,
 `🔴 KONEC SMĚNY
 Mechanik: ${name}
-Výplata: ${Math.floor(total * 0.2)}$`);
+Výplata: ${salary}$`);
 
+  shiftActive = false;
   jobs = 0;
-  total = 0;
+  totalRevenue = 0;
+  salaryRevenue = 0;
 
   updateUI();
-}
+  document.getElementById("shiftStatus").innerText = "Směna: ❌ neaktivní";
+};
 
-/* =======================
-   LOG
-======================= */
-function sendLog() {
-  if (!shiftActive) return alert("Nejdřív začni směnu!");
+/* LOG */
+window.sendLog = function () {
 
-  const name = document.getElementById("mechanik").value || "Neznámý";
+  if (!shiftActive) {
+    alert("❌ Nejprve musíš mít aktivní směnu!");
+    return;
+  }
+
   const frakce = document.getElementById("frakce").value;
   const typ = document.getElementById("typ").value;
   const components = Number(document.getElementById("components").value);
+  const name = document.getElementById("mechanik").value;
   const isEmployee = document.getElementById("employeeCheck").checked;
 
-  const PRICES = {
-    LSPD: 90,
-    EMS: 150,
-    LSSD: 150,
-    OBČAN: 150
-  };
+  const PRICES = { LSPD:90, EMS:150, LSSD:150, OBČAN:150 };
 
-  let price;
+  let price = (typ === "Oprava bez komponentů")
+    ? 500
+    : PRICES[frakce] * (components || 0);
 
-  if (typ === "Oprava bez komponentů") {
-    price = 500;
-  } else {
-    price = PRICES[frakce] * (components || 0);
-  }
-
-  if (isEmployee) {
-    price = Math.floor(price * 0.5);
-  }
+  if (isEmployee) price = Math.floor(price * 0.5);
 
   jobs++;
-  total += price;
+  totalRevenue += price;
 
-  const prefix = isEmployee ? "👷 ZAMĚSTNANEC" : "🔧";
-
-  const msg =
-`${prefix} ${typ}
-Mechanik: ${name}
-Cena: ${price}$`;
-
-  sendWebhook(WEBHOOKS[frakce], msg);
+  if (!isEmployee) {
+    salaryRevenue += price;
+  }
 
   updateUI();
-}
 
-/* =======================
-   UI
-======================= */
+  sendWebhook(WEBHOOKS[frakce],
+`${isEmployee ? "👷 ZAMĚSTNANEC" : "🔧"} ${typ}
+Mechanik: ${name}
+Cena: ${price}$`);
+
+  addDoc(collection(db, "work_logs"), {
+    uid: auth.currentUser.uid,
+    price
+  });
+};
+
+/* UI */
 function updateUI() {
   document.getElementById("jobs").innerText = jobs;
-  document.getElementById("total").innerText = total;
-  document.getElementById("salary").innerText = Math.floor(total * 0.2) + " $";
-
-  document.getElementById("shiftStatus").innerText =
-    "Směna: " + (shiftActive ? "✔ aktivní" : "❌ neaktivní");
+  document.getElementById("total").innerText = totalRevenue;
+  document.getElementById("salary").innerText = Math.floor(salaryRevenue * 0.2) + " $";
 }
+
+/* ADMIN */
+window.loadUsers = async function () {
+  const snap = await getDocs(collection(db, "users"));
+  const select = document.getElementById("userSelect");
+
+  select.innerHTML = "";
+
+  snap.forEach(u => {
+    const opt = document.createElement("option");
+    opt.value = u.id;
+    opt.textContent = (u.data().name || u.data().email || u.id).split("@")[0];
+    select.appendChild(opt);
+  });
+};
+
+window.showStats = async function () {
+  const uid = document.getElementById("userSelect").value;
+
+  const q = query(collection(db, "work_logs"), where("uid","==",uid));
+  const snap = await getDocs(q);
+
+  let t = 0, j = 0;
+
+  snap.forEach(d => {
+    t += d.data().price;
+    j++;
+  });
+
+  document.getElementById("adminResult").innerHTML =
+  `🔧 Zakázky: ${j}<br>💰 Výplata: ${Math.floor(t*0.2)}$`;
+};
+
+window.resetUser = async function () {
+  const uid = document.getElementById("userSelect").value;
+
+  const q = query(collection(db, "work_logs"), where("uid","==",uid));
+  const snap = await getDocs(q);
+
+  snap.forEach(async d => await deleteDoc(d.ref));
+
+  alert("Reset hotový");
+};
 
 </script>
 
