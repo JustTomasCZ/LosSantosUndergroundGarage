@@ -5,7 +5,17 @@
 <title>Mechanik System</title>
 
 <style>
-body { font-family: Arial; background:#111; color:white; padding:20px; }
+body {
+  font-family: Arial;
+  background:#111;
+  color:white;
+  padding:20px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+body.loaded { opacity: 1; }
+
 input, select, button { padding:10px; margin:5px; }
 .card { background:#222; padding:15px; margin-bottom:10px; border-radius:10px; }
 h2 { margin-top:0; }
@@ -17,7 +27,7 @@ button { cursor:pointer; }
 
 <body>
 
-<h1>🔧 Mechanik System (WEB)</h1>
+<h1>🔧 Mechanik System</h1>
 
 <div class="card">
 <h2>👤 Mechanik</h2>
@@ -44,7 +54,15 @@ button { cursor:pointer; }
 <select id="typ">
 <option>Tuning</option>
 <option>Oprava</option>
+<option>Oprava bez komponentů</option>
 </select>
+
+<br>
+
+<label>
+  <input type="checkbox" id="employeeCheck">
+  Zaměstnanec (50% sleva)
+</label>
 
 <br>
 
@@ -83,19 +101,13 @@ let shiftActive = false;
 let jobs = 0;
 let total = 0;
 
-/* LOAD */
-if (localStorage.getItem("jobs")) {
-  jobs = Number(localStorage.getItem("jobs"));
-  total = Number(localStorage.getItem("total"));
-  shiftActive = localStorage.getItem("shift") === "true";
+/* =======================
+   UI START
+======================= */
+window.onload = () => {
+  document.body.classList.add("loaded");
   updateUI();
-}
-
-function save() {
-  localStorage.setItem("jobs", jobs);
-  localStorage.setItem("total", total);
-  localStorage.setItem("shift", shiftActive);
-}
+};
 
 /* =======================
    DISCORD
@@ -114,42 +126,42 @@ function sendWebhook(url, content) {
 function startShift() {
   shiftActive = true;
 
-  const name = document.getElementById("mechanik").value;
+  const name = document.getElementById("mechanik").value || "Neznámý";
 
   sendWebhook(WEBHOOKS.SHIFTS,
-    `🟢 START SMĚNY\nMechanik: ${name}\nČas: ${new Date().toLocaleString()}`
-  );
+`🟢 START SMĚNY
+Mechanik: ${name}`);
 
   updateUI();
-  save();
 }
 
 function endShift() {
   shiftActive = false;
 
-  const name = document.getElementById("mechanik").value;
+  const name = document.getElementById("mechanik").value || "Neznámý";
 
   sendWebhook(WEBHOOKS.SHIFTS,
-    `🔴 KONEC SMĚNY\nMechanik: ${name}\nVýplata: ${getSalary()}$\nČas: ${new Date().toLocaleString()}`
-  );
+`🔴 KONEC SMĚNY
+Mechanik: ${name}
+Výplata: ${Math.floor(total * 0.2)}$`);
 
   jobs = 0;
   total = 0;
 
   updateUI();
-  save();
 }
 
 /* =======================
-   ZAKÁZKA
+   LOG
 ======================= */
 function sendLog() {
   if (!shiftActive) return alert("Nejdřív začni směnu!");
 
-  const name = document.getElementById("mechanik").value;
+  const name = document.getElementById("mechanik").value || "Neznámý";
   const frakce = document.getElementById("frakce").value;
   const typ = document.getElementById("typ").value;
   const components = Number(document.getElementById("components").value);
+  const isEmployee = document.getElementById("employeeCheck").checked;
 
   const PRICES = {
     LSPD: 90,
@@ -158,36 +170,31 @@ function sendLog() {
     OBČAN: 150
   };
 
-  // ✅ TADY se spočítá cena
-  const price = PRICES[frakce] * components;
+  let price;
+
+  if (typ === "Oprava bez komponentů") {
+    price = 500;
+  } else {
+    price = PRICES[frakce] * (components || 0);
+  }
+
+  if (isEmployee) {
+    price = Math.floor(price * 0.5);
+  }
 
   jobs++;
   total += price;
 
+  const prefix = isEmployee ? "👷 ZAMĚSTNANEC" : "🔧";
+
   const msg =
-`🔧 ${typ.toUpperCase()} ZAKÁZKA
+`${prefix} ${typ}
 Mechanik: ${name}
-Frakce: ${frakce}
-Komponenty: ${components}
 Cena: ${price}$`;
 
-  const hookMap = {
-    LSPD: WEBHOOKS.LSPD,
-    EMS: WEBHOOKS.EMS,
-    LSSD: WEBHOOKS.LSSD,
-    OBČAN: WEBHOOKS.OBČAN
-  };
-
-  sendWebhook(hookMap[frakce], msg);
+  sendWebhook(WEBHOOKS[frakce], msg);
 
   updateUI();
-  save();
-}
-/* =======================
-   VÝPOČET
-======================= */
-function getSalary() {
-  return Math.floor(total * 0.2);
 }
 
 /* =======================
@@ -196,7 +203,7 @@ function getSalary() {
 function updateUI() {
   document.getElementById("jobs").innerText = jobs;
   document.getElementById("total").innerText = total;
-  document.getElementById("salary").innerText = getSalary() + " $";
+  document.getElementById("salary").innerText = Math.floor(total * 0.2) + " $";
 
   document.getElementById("shiftStatus").innerText =
     "Směna: " + (shiftActive ? "✔ aktivní" : "❌ neaktivní");
